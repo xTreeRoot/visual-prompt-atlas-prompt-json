@@ -27,6 +27,8 @@ This repository can be used for:
 - realistic scene and pose references
 - visual prompt libraries for multimodal agents
 
+For Codex or other AI agents, read: [SKILL.md](./SKILL.md)
+
 ## Dataset Size
 
 Current version:
