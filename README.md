@@ -1,0 +1,270 @@
+# Visual Prompt Atlas Prompt JSON
+
+一个从真实视频参考中蒸馏整理的视觉提示词 JSON 数据库，覆盖动作、服装、表情、背景空间与搭配规则，帮助生成更真实自然的 AI 图片。
+
+A real-world video-distilled visual prompt JSON dataset covering actions, outfits, expressions, scene backgrounds, and compatibility rules for more realistic AI image generation.
+
+---
+
+## 中文介绍
+
+`visual-prompt-atlas-prompt-json` 是一套面向 AI 图片生成的结构化 Prompt 数据库。
+
+它不是凭空编写的普通提示词集合，而是基于大量真实视频画面观察与 AI 蒸馏整理出的高密度数据资产，重点保留真实人物照片中常见、自然、有效的视觉要素：
+
+- 真实动作姿态
+- 真实服装搭配
+- 真实面部表情
+- 真实背景空间
+- 场景与服装的兼容关系
+
+这个仓库适合用于：
+
+- AI 写真生成
+- 角色图片生成
+- Prompt 自动组合
+- 图像生成工作流的数据源
+- 真实感画面构图参考
+- 多模态 Agent 的视觉素材库
+
+## 数据规模
+
+当前版本包含：
+
+| 类型 | 文件 | 数量 |
+| --- | --- | ---: |
+| 动作 | `references/璃夏_动作Prompt库v2.json` | 513 |
+| 服装 | `references/璃夏_服装Prompt库v2.json` | 508 |
+| 表情 | `references/璃夏_表情Prompt库v2.json` | 376 |
+| 背景空间 | `references/璃夏_空间背景Prompt库v2.json` | 100 |
+| 场景服装兼容规则 | `references/scene_clothes_compatibility.json` | 兼容 31 类 / 不兼容 14 类 |
+
+## 目录结构
+
+```text
+references/
+  ACTIONS_INDEX.md
+  CLOTHES_INDEX.md
+  EXPRESSIONS_INDEX.md
+  SCENES_INDEX.md
+  scene_clothes_compatibility.json
+  璃夏_动作Prompt库v2.json
+  璃夏_服装Prompt库v2.json
+  璃夏_空间背景Prompt库v2.json
+  璃夏_表情Prompt库v2.json
+```
+
+## 数据内容
+
+### 动作库
+
+动作库包含动作描述、关键词、情绪标签、互动方向、动态强度、姿态类型与镜头视角等字段。
+
+适合用于筛选：
+
+- 面向镜头 / 用户互动 / 无互动动作
+- 静止 / 微动 / 动起来的动态强度
+- 站、坐、躺、跪、蹲、跳、走、跑等姿态
+- 清纯、甜美、俏皮、温柔、性感、慵懒等情绪氛围
+
+### 服装库
+
+服装库包含服装描述、关键词、情绪标签、适用场景与性感程度等信息。
+
+适合用于筛选：
+
+- 校园、居家、都市、约会、运动、海滩、派对等场景穿搭
+- 清纯、甜美、优雅、性感、活泼等风格
+- 不同强度的写真服装表达
+
+### 表情库
+
+表情库包含表情描述、眼神、嘴型、脸颊、整体情绪强度等字段。
+
+适合用于筛选：
+
+- 看镜头、侧看、低头、闭眼等眼神方向
+- 微笑、抿嘴、张嘴、害羞、冷淡等表情细节
+- 可爱、温柔、俏皮、忧郁、高冷、诱惑等情绪表达
+
+### 背景空间库
+
+背景空间库包含室内、居家私密、城市街头、城市景观、户外自然等真实空间场景。
+
+适合用于筛选：
+
+- 卧室、客厅、教室、便利店、街道、公园、湖边等背景
+- 私密空间、公共空间、城市夜景、自然水岸等氛围
+- 与动作姿态兼容的真实场景
+
+### 场景服装兼容规则
+
+兼容规则用于判断某些服装与场景是否自然匹配，避免生成明显违和的组合。
+
+例如：
+
+- 居家服更适合卧室、客厅等私密空间
+- 校园服装更适合教室、街道等日常场景
+- 泳装更适合海滩、泳池、户外水岸等空间
+
+## 使用方式
+
+你可以直接读取 JSON 文件，并按动作、服装、表情、场景进行组合：
+
+```python
+import json
+from pathlib import Path
+
+base = Path("references")
+
+actions = json.loads((base / "璃夏_动作Prompt库v2.json").read_text(encoding="utf-8"))
+clothes = json.loads((base / "璃夏_服装Prompt库v2.json").read_text(encoding="utf-8"))
+expressions = json.loads((base / "璃夏_表情Prompt库v2.json").read_text(encoding="utf-8"))
+scenes = json.loads((base / "璃夏_空间背景Prompt库v2.json").read_text(encoding="utf-8"))
+
+print(len(actions["actionLibrary"]))
+print(len(clothes["clothesLibrary"]))
+print(len(expressions["expressionLibrary"]))
+print(len(scenes["scenes"]))
+```
+
+推荐组合流程：
+
+1. 选择一个背景空间
+2. 根据背景空间筛选合适服装
+3. 选择动作姿态
+4. 选择面部表情
+5. 将描述字段组合成图像生成 Prompt
+6. 使用兼容规则过滤不自然组合
+
+## 数据说明
+
+本仓库只包含文本化、结构化的 Prompt 数据，不包含原始视频、视频帧、图片素材或任何媒体文件。
+
+这些数据适合作为图像生成工作流中的参考素材、检索素材或组合素材。请在使用时遵守你所使用模型、平台和地区的相关规则。
+
+## English Introduction
+
+`visual-prompt-atlas-prompt-json` is a structured prompt dataset for AI image generation.
+
+Instead of being a generic hand-written prompt collection, it is distilled from large-scale real-world video observations and organized into reusable JSON data. The goal is to preserve visual elements that feel natural, effective, and grounded in real photo references:
+
+- realistic body actions and poses
+- realistic outfit combinations
+- realistic facial expressions
+- realistic scene backgrounds
+- compatibility rules between scenes and outfits
+
+This repository can be used for:
+
+- AI photo generation
+- character image generation
+- automatic prompt composition
+- image generation workflows
+- realistic scene and pose references
+- visual prompt libraries for multimodal agents
+
+## Dataset Size
+
+Current version:
+
+| Type | File | Count |
+| --- | --- | ---: |
+| Actions | `references/璃夏_动作Prompt库v2.json` | 513 |
+| Outfits | `references/璃夏_服装Prompt库v2.json` | 508 |
+| Expressions | `references/璃夏_表情Prompt库v2.json` | 376 |
+| Scene backgrounds | `references/璃夏_空间背景Prompt库v2.json` | 100 |
+| Scene-outfit compatibility rules | `references/scene_clothes_compatibility.json` | 31 compatible groups / 14 incompatible groups |
+
+## What Is Included
+
+### Actions
+
+The action library includes action descriptions, keywords, mood labels, interaction direction, motion intensity, pose type, and camera view.
+
+It can be used to filter prompts by:
+
+- camera-facing, user-interactive, or non-interactive actions
+- still, subtle-motion, or high-motion states
+- standing, sitting, lying, kneeling, crouching, jumping, walking, running, and more
+- pure, sweet, playful, gentle, sexy, lazy, and other moods
+
+### Outfits
+
+The outfit library includes outfit descriptions, keywords, mood labels, suitable occasions, and spiciness levels.
+
+It can be used to filter prompts by:
+
+- school, home, urban, dating, sports, beach, party, and other occasions
+- pure, sweet, elegant, sexy, lively, and other styles
+- different levels of visual boldness
+
+### Expressions
+
+The expression library includes facial expression descriptions, eye direction, eye state, mouth shape, cheek details, and overall emotional intensity.
+
+It can be used to filter prompts by:
+
+- looking at camera, looking sideways, looking down, closed eyes, and more
+- smile, shy expression, cold expression, parted lips, and other details
+- cute, gentle, playful, melancholic, cool, seductive, and other emotional styles
+
+### Scene Backgrounds
+
+The scene library includes realistic indoor, private home, urban street, urban landscape, and outdoor nature backgrounds.
+
+It can be used to filter prompts by:
+
+- bedroom, living room, classroom, convenience store, street, park, lakeside, and more
+- private spaces, public spaces, city nights, natural waterfronts, and other atmospheres
+- scene constraints that match natural body actions
+
+### Scene-Outfit Compatibility
+
+The compatibility file helps avoid visually awkward combinations between outfits and scene backgrounds.
+
+For example:
+
+- homewear works better in bedrooms and living rooms
+- school outfits work better in classrooms and daily street scenes
+- swimwear works better around beaches, pools, and waterfront spaces
+
+## Usage
+
+You can load the JSON files directly and combine action, outfit, expression, and scene descriptions into an image-generation prompt.
+
+```python
+import json
+from pathlib import Path
+
+base = Path("references")
+
+actions = json.loads((base / "璃夏_动作Prompt库v2.json").read_text(encoding="utf-8"))
+clothes = json.loads((base / "璃夏_服装Prompt库v2.json").read_text(encoding="utf-8"))
+expressions = json.loads((base / "璃夏_表情Prompt库v2.json").read_text(encoding="utf-8"))
+scenes = json.loads((base / "璃夏_空间背景Prompt库v2.json").read_text(encoding="utf-8"))
+
+print(len(actions["actionLibrary"]))
+print(len(clothes["clothesLibrary"]))
+print(len(expressions["expressionLibrary"]))
+print(len(scenes["scenes"]))
+```
+
+Recommended composition flow:
+
+1. Select a scene background
+2. Filter suitable outfits by scene
+3. Select an action or pose
+4. Select a facial expression
+5. Combine the descriptions into an image-generation prompt
+6. Use compatibility rules to remove unnatural combinations
+
+## Data Notice
+
+This repository contains text-based structured prompt data only. It does not include source videos, video frames, images, or any media assets.
+
+Use this dataset as a reference, retrieval source, or composition source inside your own image-generation workflow. Please follow the rules of the models, platforms, and regions where you use it.
+
+## License
+
+No license has been selected yet. Please add a `LICENSE` file before publishing the repository publicly.

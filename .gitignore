@@ -1,0 +1,30 @@
+.DS_Store
+*.log
+
+# Local editor and OS files
+.idea/
+.vscode/
+
+# Python/cache artifacts
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Generated outputs and temporary files
+dist/
+build/
+tmp/
+temp/
+*.tmp
+
+# Local secrets/config
+.env
+.env.*
+!.env.example
