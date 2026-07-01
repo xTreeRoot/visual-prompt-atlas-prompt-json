@@ -29,6 +29,32 @@
 
 给 Codex 或其他 AI 智能体使用时，可以直接阅读：[SKILL.md](./SKILL.md)
 
+作为 Codex Skill 安装：
+
+```bash
+git clone https://github.com/xTreeRoot/visual-prompt-atlas-prompt-json.git ~/.codex/skills/visual-prompt-atlas-prompt-json
+```
+
+## 工具脚本
+
+这个仓库不仅包含数据，也包含可直接调用的 Python 工具脚本：
+
+```bash
+python3 scripts/visual_prompt_atlas.py validate
+python3 scripts/visual_prompt_atlas.py stats
+python3 scripts/visual_prompt_atlas.py search actions 直视镜头 --mood 温柔 --limit 5
+python3 scripts/visual_prompt_atlas.py compose --mood 温柔 --scene-category 居家私密 --occasion 居家 --pose-type 坐 --interaction-min 3
+```
+
+脚本能力：
+
+- `validate`：校验 JSON 文件和基础字段结构
+- `stats`：统计数据规模、常见情绪、场景分类等信息
+- `search`：按文本、情绪、场景、服装场合、动作姿态等条件搜索条目
+- `compose`：自动组合背景、服装、动作、表情，并使用场景服装兼容规则过滤违和组合
+
+如果要把结果交给其他程序或智能体处理，可以追加 `--json`。
+
 ## 数据规模
 
 当前版本包含：

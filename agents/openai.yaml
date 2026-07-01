@@ -1,0 +1,4 @@
+interface:
+  display_name: "Visual Prompt Atlas"
+  short_description: "Realistic prompt JSON tools"
+  default_prompt: "Use $visual-prompt-atlas-prompt-json to compose realistic AI image prompts from the dataset."

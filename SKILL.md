@@ -9,6 +9,19 @@ Use this skill to build realistic image-generation prompts from the repository's
 
 The dataset contains text-only prompt data distilled from real-world video references. It includes actions, outfits, facial expressions, scene backgrounds, and scene-outfit compatibility rules. It does not include source videos, frames, images, or media assets.
 
+## Fast Path
+
+Prefer the bundled Python CLI before manually reading large JSON files:
+
+```bash
+python3 scripts/visual_prompt_atlas.py validate
+python3 scripts/visual_prompt_atlas.py stats
+python3 scripts/visual_prompt_atlas.py search actions 直视镜头 --mood 温柔 --limit 5
+python3 scripts/visual_prompt_atlas.py compose --mood 温柔 --scene-category 居家私密 --occasion 居家 --pose-type 坐 --interaction-min 3
+```
+
+Use `--json` when another program or agent will consume the output.
+
 ## Resources
 
 Use these files in `references/`:
@@ -24,6 +37,30 @@ Use these files in `references/`:
 - `scene_clothes_compatibility.json`: compatible/incompatible scene-outfit rules.
 
 Read the relevant index file first when you need schema or filtering semantics. Parse JSON directly for selection, search, sampling, or generation. Avoid ad hoc string-only processing when JSON parsing is available.
+
+## Scripts
+
+- `scripts/visual_prompt_atlas.py`: main CLI for stats, validation, search, and prompt composition.
+- `scripts/validate_atlas.py`: compact validation entrypoint for CI or automated checks.
+
+Main CLI commands:
+
+```bash
+# Show dataset counts, top moods, categories, and compatibility coverage.
+python3 scripts/visual_prompt_atlas.py stats --json
+
+# Validate required files and schema shape.
+python3 scripts/visual_prompt_atlas.py validate
+
+# Search one library or all libraries.
+python3 scripts/visual_prompt_atlas.py search all 卧室 --limit 5 --json
+python3 scripts/visual_prompt_atlas.py search outfits 连衣裙 --mood 优雅 --min-mood 4
+
+# Compose one or more realistic prompts.
+python3 scripts/visual_prompt_atlas.py compose --mood 甜美 --scene-category 城市街头 --count 3 --seed 12 --json
+```
+
+When a task asks for generated prompt options, call `compose`. When a task asks for finding suitable entries, call `search`. When a task asks whether the dataset is healthy or installable as a skill, call `validate`.
 
 ## Core Workflow
 

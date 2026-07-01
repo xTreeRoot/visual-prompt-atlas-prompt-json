@@ -29,6 +29,32 @@ This repository can be used for:
 
 For Codex or other AI agents, read: [SKILL.md](./SKILL.md)
 
+Install as a Codex Skill:
+
+```bash
+git clone https://github.com/xTreeRoot/visual-prompt-atlas-prompt-json.git ~/.codex/skills/visual-prompt-atlas-prompt-json
+```
+
+## Tooling
+
+This repository includes functional Python scripts in addition to the dataset:
+
+```bash
+python3 scripts/visual_prompt_atlas.py validate
+python3 scripts/visual_prompt_atlas.py stats
+python3 scripts/visual_prompt_atlas.py search actions 直视镜头 --mood 温柔 --limit 5
+python3 scripts/visual_prompt_atlas.py compose --mood 温柔 --scene-category 居家私密 --occasion 居家 --pose-type 坐 --interaction-min 3
+```
+
+Script capabilities:
+
+- `validate`: validate JSON files and required schema shape
+- `stats`: summarize dataset size, common moods, scene categories, and more
+- `search`: search entries by text, mood, scene, outfit occasion, action pose, and other filters
+- `compose`: automatically combine scene, outfit, action, and expression entries while filtering awkward scene-outfit combinations
+
+Append `--json` when another program or agent should consume the output.
+
 ## Dataset Size
 
 Current version:
