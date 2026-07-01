@@ -20,9 +20,13 @@ env/
 # Generated outputs and temporary files
 dist/
 build/
+output/
 tmp/
 temp/
 *.tmp
+
+# Local/private identity reference slots
+slots/identity/
 
 # Local secrets/config
 .env

@@ -22,6 +22,27 @@ python3 scripts/visual_prompt_atlas.py compose --mood 温柔 --scene-category �
 
 Use `--json` when another program or agent will consume the output.
 
+## Identity Reference Slot
+
+When the user wants a fixed person identity across generated images, use a project-local identity slot under `slots/identity/<slot-id>/`.
+
+Each identity slot should contain only:
+
+- `reference.jpg`: the person reference image.
+- `description.md`: a concise description derived from the image, limited to face, hair, and overall body silhouette.
+
+Identity slots are local/private user data and must not be committed or pushed to a remote repository.
+
+Do not put scene, outfit, action, expression, styling rules, generated outputs, or JSON atlas data inside the identity slot.
+
+Before running an identity-locked image workflow:
+
+1. Tell the AI/user that a person reference image is required first.
+2. If the user provides a person reference image, create or update an identity slot by saving the image as `reference.jpg` and writing `description.md` from the image.
+3. Use the identity slot only for the fixed person identity: face, hair, body silhouette, and body proportions.
+4. Select every other visual element from the prompt JSON atlas: outfit, scene, action, expression, props, background, and styling.
+5. If no reference image or usable identity slot exists, the identity-locked workflow cannot run. The user may explicitly force a run; in that case, compose from the prompt JSON atlas without identity locking and state that no fixed identity reference was used.
+
 ## Resources
 
 Use these files in `references/`:
