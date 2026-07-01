@@ -145,4 +145,6 @@ Use this dataset as a reference, retrieval source, or composition source inside 
 
 ## License
 
-No open-source license has been selected yet. Before public release and long-term maintenance, adding a `LICENSE` file is recommended.
+This repository is licensed under [CC BY-NC 4.0](./LICENSE).
+
+Personal, research, educational, and other non-commercial use is allowed. Commercial use is not permitted. Please contact the repository owner separately for commercial licensing.

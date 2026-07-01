@@ -1,0 +1,46 @@
+# License
+
+This dataset is licensed under the Creative Commons Attribution-NonCommercial 4.0 International License (CC BY-NC 4.0).
+
+Official license:
+https://creativecommons.org/licenses/by-nc/4.0/legalcode
+
+Human-readable summary:
+https://creativecommons.org/licenses/by-nc/4.0/
+
+## You may
+
+- Use, copy, share, and adapt this dataset for personal, research, educational, and other non-commercial purposes.
+- Build non-commercial prompt tools, experiments, demos, and image-generation workflows based on this dataset.
+
+## You may not
+
+- Use this dataset for commercial purposes.
+- Sell, resell, sublicense, or package this dataset as part of a paid product or paid service.
+- Use this dataset, modified versions of it, or derivative prompt databases in commercial image-generation products, paid APIs, paid SaaS products, commercial datasets, or other revenue-generating services without prior written permission from the repository owner.
+
+## Attribution
+
+When sharing or adapting this dataset, please provide attribution to this repository and include a link to the license.
+
+## Commercial licensing
+
+Commercial use is not permitted under this license. For commercial licensing, please contact the repository owner separately.
+
+## 中文说明
+
+本数据集采用 Creative Commons Attribution-NonCommercial 4.0 International License（CC BY-NC 4.0）许可。
+
+官方许可协议：
+https://creativecommons.org/licenses/by-nc/4.0/legalcode
+
+通俗说明：
+https://creativecommons.org/licenses/by-nc/4.0/
+
+你可以将本数据集用于个人、研究、教育和其他非商业用途，也可以基于它构建非商业的提示词工具、实验、演示和图像生成工作流。
+
+你不可以将本数据集用于商业目的；不得销售、转售、再授权，或将其打包进付费产品、付费服务、商业数据集、商业图像生成产品、付费 API、付费 SaaS 或其他营利性服务中。
+
+如需商业使用，请另行联系仓库所有者获得书面授权。
+
+This file is a repository-level notice. In case of conflict, the official CC BY-NC 4.0 legal code controls.
