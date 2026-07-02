@@ -44,6 +44,9 @@ python3 scripts/visual_prompt_atlas.py validate
 python3 scripts/visual_prompt_atlas.py stats
 python3 scripts/visual_prompt_atlas.py search actions 直视镜头 --mood 温柔 --limit 5
 python3 scripts/visual_prompt_atlas.py compose --mood 温柔 --scene-category 居家私密 --occasion 居家 --pose-type 坐 --interaction-min 3
+python3 scripts/visual_prompt_atlas.py compose --outfit-id outfit_0081 --scene-category 城市街头 --strict-compatible --json
+python3 scripts/visual_prompt_atlas.py ids next outfits --count 3
+python3 scripts/visual_prompt_atlas.py ingest outfits new_outfits.json --dry-run
 ```
 
 Script capabilities:
@@ -52,6 +55,9 @@ Script capabilities:
 - `stats`: summarize dataset size, common moods, scene categories, and more
 - `search`: search entries by text, mood, scene, outfit occasion, action pose, and other filters
 - `compose`: automatically combine scene, outfit, action, and expression entries while filtering awkward scene-outfit combinations
+- `compose` can lock exact JSON-library entries with `--scene-id`, `--outfit-id`, `--action-id`, and `--expression-id`; `--*-index` remains available for temporary debugging
+- `ids`: preview or backfill stable entry ids
+- `ingest`: accept new entry JSON, validate fields, and assign non-conflicting ids
 
 Append `--json` when another program or agent should consume the output.
 
@@ -66,6 +72,17 @@ Current version:
 | Expressions | `references/璃夏_表情Prompt库v2.json` | 376 |
 | Scene backgrounds | `references/璃夏_空间背景Prompt库v2.json` | 100 |
 
+## Stable Entry IDs
+
+Every entry in every library has a stable `id` for cross-tool references, reproducible composition, and safer ingestion:
+
+- Actions: `action_0000`
+- Outfits: `outfit_0000`
+- Expressions: `expression_0000`
+- Scenes: `scene_0000`
+
+The first backfill maps ids to the current array positions. New entries should receive the next available id after scanning existing data through `ids next` or `ingest`. Do not renumber old ids; array order may change, but ids should remain stable.
+
 ## Directory Structure
 
 ```text
@@ -78,6 +95,10 @@ references/
   璃夏_服装Prompt库v2.json
   璃夏_空间背景Prompt库v2.json
   璃夏_表情Prompt库v2.json
+scripts/
+  visual_prompt_atlas.py
+  validate_atlas.py
+  atlas/
 ```
 
 ## Included Data
@@ -122,10 +143,12 @@ It can be used to filter prompts by:
 - bedroom, living room, classroom, convenience store, street, park, lakeside, and more
 - private spaces, public spaces, city nights, natural waterfronts, and other atmospheres
 - scene constraints that match natural body actions
+- compatible outfit occasions and forbidden outfit keywords
 
 ### Scene-Outfit Matching
 
-The CLI uses scene categories, scene names, scene tags, outfit keywords, and outfit occasions to filter visually awkward combinations.
+The CLI loads scene-outfit fit from each scene entry's `compatible_outfit_occasions` and `forbidden_outfit_keywords`, plus outfit `occasion`, `original_occasion`, and `keywords`.
+When entries are explicitly locked with `--scene-id` or `--outfit-id`, those entries take priority; with `--strict-compatible`, the scene and outfit must still have a positive compatibility match.
 
 For example:
 
@@ -162,6 +185,18 @@ Recommended composition flow:
 4. Select a facial expression
 5. Combine the descriptions into an image-generation prompt
 6. Use the matching heuristic to remove clearly unnatural combinations
+
+If `search` has already found exact entries, lock their ids directly:
+
+```bash
+python3 scripts/visual_prompt_atlas.py compose \
+  --scene-id scene_0037 \
+  --outfit-id outfit_0081 \
+  --action-id action_0278 \
+  --expression-id expression_0000 \
+  --strict-compatible \
+  --json
+```
 
 ## Data Notice
 

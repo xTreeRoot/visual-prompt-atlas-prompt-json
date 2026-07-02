@@ -3,7 +3,7 @@
 ## 文件信息
 - **文件名**：璃夏_动作Prompt库v2.json
 - **位置**：references/
-- **最后更新**：2026-03-30
+- **最后更新**：2026-07-02
 - **格式**：情感化结构化格式
 
 ---
@@ -15,6 +15,7 @@
 {
   "actionLibrary": [
     {
+      "id": "action_0000",
       "description": "动作描述文本",
       "keywords": ["关键词数组"],
       "mood": {
@@ -31,11 +32,20 @@
       "pose": {
         "type": "站/坐/躺/跪/蹲/跳/其他",
         "view": "正面/侧面/背面/俯视/仰视"
-      }
+      },
+      "required_scene_terms": ["可选：动作强依赖的场景词"]
     }
   ]
 }
 ```
+
+---
+
+## 稳定 ID
+
+- 每条动作记录都有稳定 `id`，格式为 `action_0000`。
+- 首轮 id 按当前数组位置回填；后续新增动作应通过 `python3 scripts/visual_prompt_atlas.py ingest actions <file> --write` 分配新 id。
+- 数组可以重排，但旧 id 不应重排或复用。使用 `compose --action-id action_0000` 可锁定指定动作。
 
 ---
 
@@ -60,7 +70,7 @@
 
 ## 筛选维度说明
 
-### 1. Mood（情感标签）
+### 1. 情感标签（mood）
 从情感标签库中选择相关标签，并评定 1-5 等级：
 - **5级**（主导）：该情感是核心特征
 - **4级**（明显）：该情感非常明显
@@ -68,7 +78,7 @@
 - **2级**（较弱）：该情感轻微
 - **1级**（极轻微）：该情感极轻微
 
-### 2. Interaction（交互性）
+### 2. 交互性（interaction）
 **direction（方向）**：
 - `镜头`：面向镜头
 - `用户`：仿佛与用户互动
@@ -81,7 +91,7 @@
 - 2级（轻微互动）：偶然看向镜头
 - 1级（无互动）：完全沉浸在动作中
 
-### 3. Dynamic（动态性）
+### 3. 动态性（dynamic）
 **state（状态）**：
 - `静止`：完全静止
 - `微动`：轻微摆动、呼吸感
@@ -94,12 +104,16 @@
 - 2级（低动态）：轻微摆动、调整姿势
 - 1级（静止）：站立、坐着不动
 
-### 4. Pose（姿态）
+### 4. 姿态（pose）
 **type（类型）**：
 - 站、坐、躺、跪、蹲、跳、走、跑、旋转、其他
 
 **view（视角）**：
 - 正面、侧面、背面、俯视、仰视、45度角
+
+### 5. required_scene_terms（所需场景词，可选）
+- 仅在动作强依赖具体空间时出现，例如垂钓动作需要湖、河、池塘、钓鱼、水岸等场景词。
+- 组合脚本会用它和场景文本匹配，避免把强场景动作放到不相关空间里。
 
 ---
 
@@ -177,15 +191,16 @@
 
 ---
 
-## API使用示例
+## 程序使用示例
 
-### Python代码示例
+### Python 代码示例
 ```python
-from scripts.library_loader import LibraryLoader
+import json
+from pathlib import Path
 
-# 加载动作库
-loader = LibraryLoader()
-actions = loader.load_actions()
+actions = json.loads(
+    Path("references/璃夏_动作Prompt库v2.json").read_text(encoding="utf-8")
+)["actionLibrary"]
 
 # 按情感筛选
 sweet_actions = [
@@ -217,5 +232,6 @@ result = [
 ---
 
 ## 更新记录
+- 2026-07-02：回填稳定 id，并更新入库、检索与锁定说明；当前动作库 513 条
 - 2026-03-30：更新为情感化结构化格式
 - 2026-03-29：初始版本创建，包含625个动作

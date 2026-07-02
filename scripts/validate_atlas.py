@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the Visual Prompt Atlas dataset."""
+"""校验视觉提示词图谱数据集。"""
 
 from __future__ import annotations
 

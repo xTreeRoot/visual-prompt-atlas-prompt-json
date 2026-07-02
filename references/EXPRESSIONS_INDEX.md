@@ -3,7 +3,7 @@
 ## 文件信息
 - **文件名**：璃夏_表情Prompt库v2.json
 - **位置**：references/
-- **最后更新**：2026-03-30
+- **最后更新**：2026-07-02
 - **格式**：情感化结构化格式
 
 ---
@@ -15,6 +15,7 @@
 {
   "expressionLibrary": [
     {
+      "id": "expression_0000",
       "description": "表情描述文本",
       "keywords": ["关键词数组"],
       "mood": {
@@ -45,6 +46,14 @@
 
 ---
 
+## 稳定 ID
+
+- 每条表情记录都有稳定 `id`，格式为 `expression_0000`。
+- 首轮 id 按当前数组位置回填；后续新增表情应通过 `python3 scripts/visual_prompt_atlas.py ingest expressions <file> --write` 分配新 id。
+- 数组可以重排，但旧 id 不应重排或复用。使用 `compose --expression-id expression_0000` 可锁定指定表情。
+
+---
+
 ## 情感标签体系
 
 ### 清纯系
@@ -66,7 +75,7 @@
 
 ## 筛选维度说明
 
-### 1. Eyes（眼睛）
+### 1. 眼睛字段（eyes）
 **look（眼神状态）**：
 - 清澈、明亮、温柔、温暖、灵动、俏皮
 - 迷离、诱惑、妖娆、魅惑
@@ -93,7 +102,7 @@
 - 眨左眼（单眼眨眼）
 - 眨右眼（单眼眨眼）
 
-### 2. Mouth（嘴巴）
+### 2. 嘴巴字段（mouth）
 **shape（嘴角形态）**：
 - 微笑
 - 大笑
@@ -111,7 +120,7 @@
 - 嘴唇微张
 - 嘴角微微抿起
 
-### 3. Cheek（脸颊）
+### 3. 脸颊字段（cheek）
 **color（脸颊颜色）**：
 - 无红、无脸红
 - 微红
@@ -124,7 +133,7 @@
 - 3级：明显红
 - 4级：深红、潮红
 
-### 4. Overall（整体）
+### 4. 整体字段（overall）
 **emotion（整体情感）**：
 - 用一句话概括整体表情的情感
 - 如：甜美、冷艳、俏皮、忧郁、无辜、性感、温柔等
@@ -149,8 +158,8 @@
 
 ### 按眼睛筛选
 - **看镜头**：eyes.direction == "看镜头"
-- **眼神清澈**：eyes.look == "清澈" or "明亮"
-- **眼神迷离**：eyes.look == "迷离" or "诱惑"
+- **眼神清澈**：eyes.look == "清澈" 或 "明亮"
+- **眼神迷离**：eyes.look == "迷离" 或 "诱惑"
 - **眨眼**：eyes.action == "眨眼"
 
 ### 按嘴巴筛选
@@ -209,15 +218,16 @@
 
 ---
 
-## API使用示例
+## 程序使用示例
 
-### Python代码示例
+### Python 代码示例
 ```python
-from scripts.library_loader import LibraryLoader
+import json
+from pathlib import Path
 
-# 加载表情库
-loader = LibraryLoader()
-expressions = loader.load_expressions()
+expressions = json.loads(
+    Path("references/璃夏_表情Prompt库v2.json").read_text(encoding="utf-8")
+)["expressionLibrary"]
 
 # 按情感筛选
 sweet_expressions = [
@@ -286,4 +296,5 @@ result = [
 ---
 
 ## 更新记录
+- 2026-07-02：回填稳定 id，并更新入库、检索与锁定说明；当前表情库 376 条
 - 2026-03-30：更新为情感化结构化格式
