@@ -45,6 +45,7 @@ python3 scripts/visual_prompt_atlas.py stats
 python3 scripts/visual_prompt_atlas.py search actions 直视镜头 --mood 温柔 --limit 5
 python3 scripts/visual_prompt_atlas.py compose --mood 温柔 --scene-category 居家私密 --occasion 居家 --pose-type 坐 --interaction-min 3
 python3 scripts/visual_prompt_atlas.py compose --outfit-id outfit_0081 --scene-category 城市街头 --strict-compatible --json
+python3 scripts/visual_prompt_atlas.py compose --identity-slot rixia-long-leg-v1 --mood 温柔 --json
 python3 scripts/visual_prompt_atlas.py ids next outfits --count 3
 python3 scripts/visual_prompt_atlas.py ingest outfits new_outfits.json --dry-run
 ```
@@ -56,6 +57,7 @@ python3 scripts/visual_prompt_atlas.py ingest outfits new_outfits.json --dry-run
 - `search`：按文本、情绪、场景、服装场合、动作姿态等条件搜索条目
 - `compose`：自动组合背景、服装、动作、表情，并根据场景分类与服装场合过滤明显违和组合
 - `compose` 可用 `--scene-id`、`--outfit-id`、`--action-id`、`--expression-id` 锁定 JSON 库里的指定条目；`--*-index` 仍可用于临时调试
+- `compose` 可用 `--identity-slot <slot-id>` 读取本地身份槽，把身份描述和参考图路径加入输出，并将身份描述写入生成提示词
 - `ids`：预览或回填稳定条目 id
 - `ingest`：接收新条目 JSON，校验字段并自动分配不冲突的 id
 
@@ -194,6 +196,7 @@ python3 scripts/visual_prompt_atlas.py compose \
   --outfit-id outfit_0081 \
   --action-id action_0278 \
   --expression-id expression_0000 \
+  --identity-slot rixia-long-leg-v1 \
   --strict-compatible \
   --json
 ```

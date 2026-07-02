@@ -9,7 +9,9 @@ from typing import Any
 
 from .constants import (
     COMPATIBILITY_LABELS,
+    IDENTITY_SLOTS,
     LIBRARY_LABELS,
+    ROOT,
 )
 from .data import flatten_text, item_has_any, load_atlas, mood_value, normalize_terms, write_json
 from .errors import AtlasCliError
@@ -158,8 +160,64 @@ def fixed_entry(
     return index, items[index]
 
 
-def compact_prompt(scene: dict[str, Any], outfit: dict[str, Any], action: dict[str, Any], expression: dict[str, Any]) -> str:
+def compact_identity_description(text: str) -> str:
+    parts: list[str] = []
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        if not line:
+            continue
+        if line.startswith("#"):
+            continue
+        line = line.removeprefix("-").strip()
+        if line.endswith("：") or line.endswith(":"):
+            continue
+        if line:
+            parts.append(line)
+    return "；".join(parts)
+
+
+def load_identity_slot(slot_id: str | None) -> dict[str, str] | None:
+    if not slot_id:
+        return None
+    if slot_id in {".", ".."} or "/" in slot_id or "\\" in slot_id:
+        raise AtlasCliError(f"身份槽 id 无效: {slot_id}")
+
+    slot_dir = IDENTITY_SLOTS / slot_id
+    description_path = slot_dir / "description.md"
+    reference_path = slot_dir / "reference.jpg"
+
+    if not slot_dir.is_dir():
+        raise AtlasCliError(f"身份槽不存在: {slot_id}")
+    if not reference_path.is_file():
+        raise AtlasCliError(f"身份槽缺少参考图: {reference_path.relative_to(ROOT)}")
+    if not description_path.is_file():
+        raise AtlasCliError(f"身份槽缺少描述: {description_path.relative_to(ROOT)}")
+
+    description = compact_identity_description(description_path.read_text(encoding="utf-8"))
+    if not description:
+        raise AtlasCliError(f"身份槽描述为空: {description_path.relative_to(ROOT)}")
+
+    return {
+        "slot": slot_id,
+        "reference": str(reference_path.relative_to(ROOT)),
+        "description": description,
+    }
+
+
+def compact_prompt(
+    scene: dict[str, Any],
+    outfit: dict[str, Any],
+    action: dict[str, Any],
+    expression: dict[str, Any],
+    identity: dict[str, str] | None = None,
+) -> str:
     parts = [
+        (
+            f"身份槽 {identity['slot']}：固定同一位人物身份，"
+            f"{identity['description']}"
+        )
+        if identity
+        else "",
         str(scene.get("scene_summary", "")).strip(),
         str(outfit.get("description", "")).strip(),
         str(action.get("description", "")).strip(),
@@ -173,6 +231,12 @@ def command_compose(args: argparse.Namespace) -> int:
     atlas = load_atlas()
     rng = random.Random(args.seed)
     outputs: list[dict[str, Any]] = []
+
+    try:
+        identity = load_identity_slot(getattr(args, "identity_slot", None))
+    except AtlasCliError as exc:
+        print(f"错误: {exc}", file=sys.stderr)
+        return 2
 
     try:
         fixed_scene = fixed_entry(atlas["scenes"], args.scene_index, args.scene_id, "scenes")
@@ -323,32 +387,39 @@ def command_compose(args: argparse.Namespace) -> int:
         else:
             expression_index, expression = choose(candidates(atlas["expressions"], expression_score, lambda item: 0), rng)
 
-        outputs.append(
-            {
-                "scene": scene.get("scene"),
-                "scene_index": scene_index,
-                "scene_id": scene.get("id"),
-                "scene_category": scene.get("category"),
-                "outfit_index": outfit_index,
-                "outfit_id": outfit.get("id"),
-                "action_index": action_index,
-                "action_id": action.get("id"),
-                "expression_index": expression_index,
-                "expression_id": expression.get("id"),
-                "compatibility": compat_status,
-                "compatibility_note": compat_note,
-                "outfit": outfit.get("description"),
-                "action": action.get("description"),
-                "expression": expression.get("description"),
-                "prompt": compact_prompt(scene, outfit, action, expression),
-                "fixed": {
-                    "scene": fixed_scene is not None,
-                    "outfit": fixed_outfit is not None,
-                    "action": fixed_action is not None,
-                    "expression": fixed_expression is not None,
-                },
-            }
-        )
+        output = {
+            "scene": scene.get("scene"),
+            "scene_index": scene_index,
+            "scene_id": scene.get("id"),
+            "scene_category": scene.get("category"),
+            "outfit_index": outfit_index,
+            "outfit_id": outfit.get("id"),
+            "action_index": action_index,
+            "action_id": action.get("id"),
+            "expression_index": expression_index,
+            "expression_id": expression.get("id"),
+            "compatibility": compat_status,
+            "compatibility_note": compat_note,
+            "outfit": outfit.get("description"),
+            "action": action.get("description"),
+            "expression": expression.get("description"),
+            "prompt": compact_prompt(scene, outfit, action, expression, identity),
+            "fixed": {
+                "scene": fixed_scene is not None,
+                "outfit": fixed_outfit is not None,
+                "action": fixed_action is not None,
+                "expression": fixed_expression is not None,
+            },
+        }
+        if identity:
+            output.update(
+                {
+                    "identity_slot": identity["slot"],
+                    "identity_reference": identity["reference"],
+                    "identity": identity["description"],
+                }
+            )
+        outputs.append(output)
 
     if args.json:
         write_json(outputs if args.count != 1 else outputs[0])
@@ -360,6 +431,9 @@ def command_compose(args: argparse.Namespace) -> int:
             print(f"服装: {output['outfit']} ({output['outfit_id']}@{output['outfit_index']})")
             print(f"动作: {output['action']} ({output['action_id']}@{output['action_index']})")
             print(f"表情: {output['expression']} ({output['expression_id']}@{output['expression_index']})")
+            if identity:
+                print(f"身份槽: {identity['slot']} ({identity['reference']})")
+                print(f"身份: {identity['description']}")
             compatibility = COMPATIBILITY_LABELS.get(str(output["compatibility"]), str(output["compatibility"]))
             print(f"兼容性: {compatibility} - {output['compatibility_note']}")
             print(f"提示词: {output['prompt']}")

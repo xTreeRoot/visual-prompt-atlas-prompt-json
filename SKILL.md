@@ -19,6 +19,7 @@ python3 scripts/visual_prompt_atlas.py stats
 python3 scripts/visual_prompt_atlas.py search actions 直视镜头 --mood 温柔 --limit 5
 python3 scripts/visual_prompt_atlas.py compose --mood 温柔 --scene-category 居家私密 --occasion 居家 --pose-type 坐 --interaction-min 3
 python3 scripts/visual_prompt_atlas.py compose --outfit-id outfit_0081 --scene-category 城市街头 --strict-compatible --json
+python3 scripts/visual_prompt_atlas.py compose --identity-slot rixia-long-leg-v1 --mood 温柔 --json
 ```
 
 当结果要交给其它程序或智能体消费时，追加 `--json`。
@@ -42,7 +43,8 @@ python3 scripts/visual_prompt_atlas.py compose --outfit-id outfit_0081 --scene-c
 2. 如果用户提供了人物参考图，创建或更新身份槽，将图片保存为 `reference.jpg`，并根据图片写入 `description.md`。
 3. 身份槽只用于固定人物身份：脸部、发型、身体轮廓和身体比例。
 4. 其它视觉元素都从提示词图谱中选择：服装、场景、动作、表情、道具、背景和风格。
-5. 如果没有参考图或可用身份槽，身份锁定工作流无法运行。用户可以明确要求强制运行；此时只从提示词图谱组合，不做身份锁定，并说明未使用固定身份参考。
+5. 需要让 `compose` 输出带上身份信息时，使用 `--identity-slot <slot-id>`。脚本会读取 `description.md`，在 JSON 输出中加入 `identity_slot`、`identity_reference`、`identity`，并把身份描述写进 `prompt`。
+6. 如果没有参考图或可用身份槽，身份锁定工作流无法运行。用户可以明确要求强制运行；此时只从提示词图谱组合，不做身份锁定，并说明未使用固定身份参考。
 
 ## 资源
 
@@ -87,6 +89,7 @@ python3 scripts/visual_prompt_atlas.py search outfits 连衣裙 --mood 优雅 --
 # 组合一个或多个真实感提示词
 python3 scripts/visual_prompt_atlas.py compose --mood 甜美 --scene-category 城市街头 --count 3 --seed 12 --json
 python3 scripts/visual_prompt_atlas.py compose --scene-id scene_0037 --outfit-id outfit_0081 --action-id action_0278 --expression-id expression_0000 --strict-compatible --json
+python3 scripts/visual_prompt_atlas.py compose --identity-slot rixia-long-leg-v1 --strict-compatible --json
 
 # 预览稳定 id 与入库新条目
 python3 scripts/visual_prompt_atlas.py ids next outfits --count 3
@@ -95,7 +98,7 @@ python3 scripts/visual_prompt_atlas.py ingest outfits new_outfits.json --dry-run
 
 用户要生成提示词选项时，调用 `compose`。用户要查找合适条目时，调用 `search`。用户要确认数据集健康或可安装为技能时，调用 `validate`。
 
-`search` 和 `compose` 返回的是图谱匹配结果与素材片段，不是面向生图模型的最终主提示词。面向用户输出时，必须把选中的场景、服装、动作和表情作为约束，由 AI 自行改写成完整、连贯、可直接使用的主提示词。
+`search` 和 `compose` 返回的是图谱匹配结果与素材片段，不是面向生图模型的最终主提示词。面向用户输出时，必须把选中的场景、服装、动作和表情作为约束；如果使用了 `--identity-slot`，还必须把身份槽描述作为固定人物身份约束，由 AI 自行改写成完整、连贯、可直接使用的主提示词。
 
 用户要新增数据时，使用 `ingest`，让脚本扫描目标库并自动分配 id。用户已经指定精确 JSON 条目时，使用 `--scene-id`、`--outfit-id`、`--action-id` 或 `--expression-id` 锁定条目。锁定条目优先，其余筛选条件只作用于未锁定的库。`--*-index` 仅用于临时调试或过渡。
 
@@ -106,9 +109,9 @@ python3 scripts/visual_prompt_atlas.py ingest outfits new_outfits.json --dry-run
 3. 从 `璃夏_服装Prompt库v2.json` 选择服装；用场景分类、场景标签、服装场合和服装关键词避免不自然组合。
 4. 从 `璃夏_动作Prompt库v2.json` 选择适合场景推荐动作和互动强度的动作。
 5. 从 `璃夏_表情Prompt库v2.json` 选择符合情绪和姿态的表情。
-6. 把选中条目的 `description` 字段当作素材约束，而不是最终文本。先提取场景、服装、动作、表情里必须保留的视觉要点。
+6. 把选中条目的 `description` 字段当作素材约束，而不是最终文本。先提取场景、服装、动作、表情里必须保留的视觉要点；如果使用身份槽，额外读取 `description.md` 作为固定人物身份约束。
 7. 由 AI 自行生成每一条完整主提示词：补足主体、构图、镜头距离、光线、空间关系、材质细节和真实摄影语气，让结果像一段自然的生图提示词，而不是四段匹配片段的机械拼接。
-8. 主提示词必须忠于已选素材，不要凭空替换场景、服装、动作或表情；可以补充不冲突的摄影细节和风格控制词。关键词有助于控制时可以保留，但不要无故把整个 JSON 对象塞进最终提示词。
+8. 主提示词必须忠于已选素材和身份槽描述，不要凭空替换场景、服装、动作、表情或人物身份；可以补充不冲突的摄影细节和风格控制词。关键词有助于控制时可以保留，但不要无故把整个 JSON 对象塞进最终提示词。
 9. 用户要多个选项时，每个选项都要有独立主提示词；每次只变化一两个维度，例如场景加服装，或动作加表情，方便比较。
 10. 如果用户指定精确 id，先锁定这些条目，只抽样未指定的库。开启 `--strict-compatible` 时，锁定的场景/服装组合仍必须通过正向兼容启发式。
 
@@ -145,6 +148,9 @@ JSON 输出使用稳定 key：
   "action_id": "action_0278",
   "expression": "...",
   "expression_id": "expression_0000",
+  "identity_slot": "rixia-long-leg-v1",
+  "identity_reference": "slots/identity/rixia-long-leg-v1/reference.jpg",
+  "identity": "从身份槽 description.md 压缩出的身份描述",
   "prompt": "AI 根据匹配素材生成的完整主提示词，不是素材片段原文拼接",
   "fixed": {"scene": true, "outfit": true, "action": true, "expression": true},
   "notes": "..."

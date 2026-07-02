@@ -7,6 +7,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 REFERENCES = ROOT / "references"
+IDENTITY_SLOTS = ROOT / "slots" / "identity"
 
 LIBRARIES = {
     "actions": ("璃夏_动作Prompt库v2.json", "actionLibrary"),

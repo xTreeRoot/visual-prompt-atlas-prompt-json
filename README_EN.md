@@ -45,6 +45,7 @@ python3 scripts/visual_prompt_atlas.py stats
 python3 scripts/visual_prompt_atlas.py search actions 直视镜头 --mood 温柔 --limit 5
 python3 scripts/visual_prompt_atlas.py compose --mood 温柔 --scene-category 居家私密 --occasion 居家 --pose-type 坐 --interaction-min 3
 python3 scripts/visual_prompt_atlas.py compose --outfit-id outfit_0081 --scene-category 城市街头 --strict-compatible --json
+python3 scripts/visual_prompt_atlas.py compose --identity-slot rixia-long-leg-v1 --mood 温柔 --json
 python3 scripts/visual_prompt_atlas.py ids next outfits --count 3
 python3 scripts/visual_prompt_atlas.py ingest outfits new_outfits.json --dry-run
 ```
@@ -56,6 +57,7 @@ Script capabilities:
 - `search`: search entries by text, mood, scene, outfit occasion, action pose, and other filters
 - `compose`: automatically combine scene, outfit, action, and expression entries while filtering awkward scene-outfit combinations
 - `compose` can lock exact JSON-library entries with `--scene-id`, `--outfit-id`, `--action-id`, and `--expression-id`; `--*-index` remains available for temporary debugging
+- `compose` can read a local identity slot with `--identity-slot <slot-id>`, add the identity description and reference path to output, and include the identity description in the generated prompt
 - `ids`: preview or backfill stable entry ids
 - `ingest`: accept new entry JSON, validate fields, and assign non-conflicting ids
 
@@ -194,6 +196,7 @@ python3 scripts/visual_prompt_atlas.py compose \
   --outfit-id outfit_0081 \
   --action-id action_0278 \
   --expression-id expression_0000 \
+  --identity-slot rixia-long-leg-v1 \
   --strict-compatible \
   --json
 ```

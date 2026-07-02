@@ -123,6 +123,7 @@ def build_parser() -> argparse.ArgumentParser:
     compose.add_argument("--outfit-id", help="使用指定 outfits id")
     compose.add_argument("--action-id", help="使用指定 actions id")
     compose.add_argument("--expression-id", help="使用指定 expressions id")
+    compose.add_argument("--identity-slot", help="读取本地身份槽 id，并把身份描述加入生成提示词")
     compose.add_argument(
         "--strict-compatible",
         action="store_true",
@@ -145,4 +146,3 @@ def main(argv: list[str] | None = None) -> int:
     except AtlasCliError as exc:
         print(f"错误: {exc}", file=sys.stderr)
         return 2
-
