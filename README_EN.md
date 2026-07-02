@@ -2,7 +2,7 @@
 
 Chinese version: [README.md](./README.md)
 
-A real-world video-distilled visual prompt JSON dataset covering actions, outfits, expressions, scene backgrounds, and compatibility rules for more realistic AI image generation.
+A real-world video-distilled visual prompt JSON dataset covering actions, outfits, expressions, and scene backgrounds for more realistic AI image generation.
 
 ## Introduction
 
@@ -16,7 +16,7 @@ Core content includes:
 - realistic outfit combinations
 - realistic facial expressions
 - realistic scene backgrounds
-- compatibility rules between scenes and outfits
+- heuristic scene-outfit matching from existing scene and outfit fields
 
 This repository can be used for:
 
@@ -65,7 +65,6 @@ Current version:
 | Outfits | `references/璃夏_服装Prompt库v2.json` | 508 |
 | Expressions | `references/璃夏_表情Prompt库v2.json` | 376 |
 | Scene backgrounds | `references/璃夏_空间背景Prompt库v2.json` | 100 |
-| Scene-outfit compatibility rules | `references/scene_clothes_compatibility.json` | 31 compatible groups / 14 incompatible groups |
 
 ## Directory Structure
 
@@ -75,7 +74,6 @@ references/
   CLOTHES_INDEX.md
   EXPRESSIONS_INDEX.md
   SCENES_INDEX.md
-  scene_clothes_compatibility.json
   璃夏_动作Prompt库v2.json
   璃夏_服装Prompt库v2.json
   璃夏_空间背景Prompt库v2.json
@@ -97,13 +95,13 @@ It can be used to filter prompts by:
 
 ### Outfits
 
-The outfit library includes outfit descriptions, keywords, mood labels, suitable occasions, and spiciness levels.
+The outfit library includes outfit descriptions, keywords, mood labels, and suitable occasions.
 
 It can be used to filter prompts by:
 
 - school, home, urban, dating, sports, beach, party, and other occasions
 - pure, sweet, elegant, sexy, lively, and other styles
-- different levels of visual boldness
+- different photographic outfit styles
 
 ### Expressions
 
@@ -125,9 +123,9 @@ It can be used to filter prompts by:
 - private spaces, public spaces, city nights, natural waterfronts, and other atmospheres
 - scene constraints that match natural body actions
 
-### Scene-Outfit Compatibility
+### Scene-Outfit Matching
 
-The compatibility file helps avoid visually awkward combinations between outfits and scene backgrounds.
+The CLI uses scene categories, scene names, scene tags, outfit keywords, and outfit occasions to filter visually awkward combinations.
 
 For example:
 
@@ -163,7 +161,7 @@ Recommended composition flow:
 3. Select an action or pose
 4. Select a facial expression
 5. Combine the descriptions into an image-generation prompt
-6. Use compatibility rules to remove unnatural combinations
+6. Use the matching heuristic to remove clearly unnatural combinations
 
 ## Data Notice
 

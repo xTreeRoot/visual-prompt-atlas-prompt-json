@@ -1,13 +1,13 @@
 ---
 name: visual-prompt-atlas-prompt-json
-description: Use this real-world video-distilled visual prompt JSON atlas when composing realistic AI image prompts, building prompt generators, selecting actions/outfits/expressions/scene backgrounds, or filtering scene-outfit compatibility from the bundled references data. Trigger when the user asks for realistic photo prompts, character photo prompt combinations, visual prompt datasets, prompt JSON lookup, or AI image-generation workflows based on actions, clothing, expressions, and backgrounds.
+description: Use this real-world video-distilled visual prompt JSON atlas when composing realistic AI image prompts, building prompt generators, selecting actions/outfits/expressions/scene backgrounds, or filtering awkward scene-outfit combinations from the bundled references data. Trigger when the user asks for realistic photo prompts, character photo prompt combinations, visual prompt datasets, prompt JSON lookup, or AI image-generation workflows based on actions, clothing, expressions, and backgrounds.
 ---
 
 # Visual Prompt Atlas Prompt JSON
 
 Use this skill to build realistic image-generation prompts from the repository's structured JSON prompt atlas.
 
-The dataset contains text-only prompt data distilled from real-world video references. It includes actions, outfits, facial expressions, scene backgrounds, and scene-outfit compatibility rules. It does not include source videos, frames, images, or media assets.
+The dataset contains text-only prompt data distilled from real-world video references. It includes actions, outfits, facial expressions, and scene backgrounds. It does not include source videos, frames, images, or media assets.
 
 ## Fast Path
 
@@ -48,14 +48,13 @@ Before running an identity-locked image workflow:
 Use these files in `references/`:
 
 - `ACTIONS_INDEX.md`: action schema, mood tags, interaction levels, dynamic levels, pose/view filters.
-- `CLOTHES_INDEX.md`: outfit schema, mood tags, occasions, spiciness levels.
+- `CLOTHES_INDEX.md`: outfit schema, mood tags, occasions, and keyword filters.
 - `EXPRESSIONS_INDEX.md`: expression schema, eye/mouth/cheek/overall emotion filters.
 - `SCENES_INDEX.md`: scene categories, high-frequency scene names, tags, recommended actions.
 - `璃夏_动作Prompt库v2.json`: 513 action entries under `actionLibrary`.
 - `璃夏_服装Prompt库v2.json`: 508 outfit entries under `clothesLibrary`.
 - `璃夏_表情Prompt库v2.json`: 376 expression entries under `expressionLibrary`.
 - `璃夏_空间背景Prompt库v2.json`: 100 scene entries under `scenes`.
-- `scene_clothes_compatibility.json`: compatible/incompatible scene-outfit rules.
 
 Read the relevant index file first when you need schema or filtering semantics. Parse JSON directly for selection, search, sampling, or generation. Avoid ad hoc string-only processing when JSON parsing is available.
 
@@ -67,7 +66,7 @@ Read the relevant index file first when you need schema or filtering semantics. 
 Main CLI commands:
 
 ```bash
-# Show dataset counts, top moods, categories, and compatibility coverage.
+# Show dataset counts, top moods, categories, and label summaries.
 python3 scripts/visual_prompt_atlas.py stats --json
 
 # Validate required files and schema shape.
@@ -87,7 +86,7 @@ When a task asks for generated prompt options, call `compose`. When a task asks 
 
 1. Understand the user's requested image style, subject, mood, setting, outfit constraints, and output format.
 2. Select a scene from `璃夏_空间背景Prompt库v2.json`.
-3. Select an outfit from `璃夏_服装Prompt库v2.json`, then check `scene_clothes_compatibility.json` to avoid unnatural combinations.
+3. Select an outfit from `璃夏_服装Prompt库v2.json`; use scene category, scene tags, outfit occasion, and outfit keywords to avoid unnatural combinations.
 4. Select an action from `璃夏_动作Prompt库v2.json` that fits the scene's recommended actions and the requested interaction level.
 5. Select an expression from `璃夏_表情Prompt库v2.json` that matches the requested mood and pose.
 6. Combine the chosen `description` fields into a concise image prompt. Preserve useful keywords when they add control, but avoid dumping entire JSON objects into the final prompt unless requested.
@@ -99,7 +98,7 @@ When a task asks for generated prompt options, call `compose`. When a task asks 
 - Prefer `interaction.level >= 4` and `interaction.direction == "镜头"` for direct camera-facing portrait prompts.
 - Prefer low dynamic intensity for calm portraits, medium intensity for natural daily photos, and high intensity for dance, sports, or motion shots.
 - Match pose type to scene constraints: sitting actions for sofas, beds, classrooms, and benches; standing or walking actions for streets, platforms, corridors, and outdoor spaces.
-- Use scene-outfit compatibility as a filter, not as the only selection signal. If the user explicitly requests an unusual combination, mention the mismatch and offer a more natural alternative.
+- Use scene-outfit fit as a heuristic filter, not as the only selection signal. If the user explicitly requests an unusual combination, mention the mismatch and offer a more natural alternative.
 - Keep the final prompt grounded in realistic physical space, plausible clothing, and natural body language.
 
 ## Output Patterns

@@ -22,8 +22,6 @@ LIBRARIES = {
     "scenes": ("璃夏_空间背景Prompt库v2.json", "scenes"),
 }
 
-COMPATIBILITY_FILE = "scene_clothes_compatibility.json"
-
 POSE_HINTS = {
     "站": ["站", "站立", "倚靠", "靠栏杆", "行走", "步行"],
     "坐": ["坐", "坐于", "坐在", "倚坐", "靠床", "床边", "沙发", "椅", "长椅", "课桌"],
@@ -34,6 +32,71 @@ POSE_HINTS = {
     "走": ["走", "行走", "步行"],
     "跑": ["跑", "奔跑"],
 }
+
+SCENE_OCCASION_MATCHES = {
+    "居家私密": {"居家", "日常", "私密", "约会"},
+    "城市街头": {"街拍", "出行", "日常", "约会", "旅行", "夜景"},
+    "城市街头/室内": {"街拍", "出行", "日常", "职场", "正式"},
+    "城市景观": {"观景", "旅行", "户外", "出行", "夜景", "日常"},
+    "室内": {"日常", "出行"},
+    "户外自然": {"户外", "旅行", "观景", "运动", "日常"},
+}
+
+SCENE_NAME_OCCASION_MATCHES = {
+    "教室": {"校园", "日常"},
+    "便利店": {"日常", "出行", "街拍"},
+    "KTV": {"派对", "约会", "夜景"},
+    "办公": {"职场", "正式", "日常"},
+    "商业": {"职场", "正式", "日常"},
+    "机场": {"出行", "旅行", "正式"},
+    "医院": {"日常", "出行"},
+    "公园": {"户外", "运动", "日常", "街拍"},
+    "湖": {"户外", "旅行", "观景", "运动"},
+    "河": {"户外", "旅行", "观景", "运动"},
+    "钓鱼": {"户外", "旅行", "运动"},
+}
+
+SCENE_OUTFIT_CONFLICTS = {
+    "school_public": {
+        "scene": {"教室", "校园", "学校"},
+        "outfit": {"比基尼", "泳装", "内衣"},
+    },
+    "home_swimwear": {
+        "scene": {"卧室", "客厅", "厨房", "卫生间", "居家私密", "家庭空间"},
+        "outfit": {"比基尼", "泳装"},
+    },
+    "public_swimwear": {
+        "scene": {"城市街头", "城市景观", "室内", "便利店", "机场", "医院", "公交", "站台", "办公"},
+        "outfit": {"比基尼", "泳装"},
+    },
+    "formal_privatewear": {
+        "scene": {"办公", "商业", "机场", "医院", "教室"},
+        "outfit": {"睡衣", "家居服", "私密"},
+    },
+}
+
+ACTION_SCENE_CONFLICTS = [
+    (
+        "water_action_outside_water_scene",
+        {"水中", "泳池", "浴缸"},
+        {"湖", "河", "水", "池塘", "海", "卫生间", "浴室", "泳池", "钓鱼"},
+    ),
+    (
+        "vehicle_action_outside_vehicle_scene",
+        {"车顶", "车外"},
+        {"车顶", "车外", "停车场"},
+    ),
+    (
+        "transit_action_outside_transit_scene",
+        {"公交扶手", "车厢扶手"},
+        {"公交", "车内", "车厢", "站台"},
+    ),
+    (
+        "fishing_action_outside_fishing_scene",
+        {"鱼竿", "钓竿", "垂钓", "钓鱼"},
+        {"湖", "河", "池塘", "钓鱼", "水岸"},
+    ),
+]
 
 
 def read_json(path: Path) -> Any:
@@ -49,7 +112,6 @@ def load_atlas(base: Path = REFERENCES) -> dict[str, Any]:
     for name, (filename, key) in LIBRARIES.items():
         data = read_json(base / filename)
         atlas[name] = data[key]
-    atlas["compatibility"] = read_json(base / COMPATIBILITY_FILE)
     return atlas
 
 
@@ -143,13 +205,6 @@ def command_stats(args: argparse.Namespace) -> int:
         if name == "outfits":
             result[name]["top_occasions"] = top_counter(items, "occasion")
 
-    compat = atlas["compatibility"]
-    result["compatibility"] = {
-        "compatible_scene_count": len(compat.get("compatible", {})),
-        "incompatible_scene_count": len(compat.get("incompatible", {})),
-        "confidence_scene_count": len(compat.get("confidence", {})),
-    }
-
     if args.json:
         write_json(result)
     else:
@@ -222,17 +277,6 @@ def validate_atlas(base: Path = REFERENCES) -> tuple[list[str], list[str]]:
             elif library == "expressions":
                 for section in ("eyes", "mouth", "cheek", "overall"):
                     check_entry(isinstance(item.get(section), dict), errors, f"{prefix}: {section} must be an object")
-
-    compat_path = base / COMPATIBILITY_FILE
-    check_entry(compat_path.exists(), errors, f"missing file: {compat_path}")
-    if compat_path.exists():
-        try:
-            compat = read_json(compat_path)
-        except json.JSONDecodeError as exc:
-            errors.append(f"invalid json in {COMPATIBILITY_FILE}: {exc}")
-        else:
-            for key in ("compatible", "incompatible", "confidence", "metadata"):
-                check_entry(isinstance(compat.get(key), dict), errors, f"{COMPATIBILITY_FILE}: {key} must be an object")
 
     return errors, warnings
 
@@ -345,42 +389,51 @@ def command_search(args: argparse.Namespace) -> int:
     return 0
 
 
-def outfit_tags(outfit: dict[str, Any], compatibility: dict[str, Any]) -> set[str]:
-    known_tags: set[str] = set()
-    for section in ("compatible", "incompatible"):
-        for values in compatibility.get(section, {}).values():
-            known_tags.update(str(value) for value in values)
-    text = flatten_text(outfit)
-    return {tag for tag in known_tags if tag and tag in text}
+def contains_any(text: str, terms: set[str]) -> bool:
+    return any(term and term in text for term in terms)
 
 
-def scene_rule(scene_name: str, compatibility: dict[str, Any], section: str) -> tuple[str | None, set[str]]:
-    rules = compatibility.get(section, {})
-    if scene_name in rules:
-        return scene_name, set(str(value) for value in rules[scene_name])
-    for key, values in rules.items():
-        if key in scene_name or scene_name in key:
-            return key, set(str(value) for value in values)
-    return None, set()
+def preferred_occasions_for_scene(scene: dict[str, Any]) -> set[str]:
+    category = str(scene.get("category", ""))
+    scene_text = flatten_text(
+        {
+            "scene": scene.get("scene"),
+            "category": scene.get("category"),
+            "scene_tags": scene.get("scene_tags"),
+            "scene_summary": scene.get("scene_summary"),
+        }
+    )
+    preferred = set(SCENE_OCCASION_MATCHES.get(category, set()))
+    for scene_hint, occasions in SCENE_NAME_OCCASION_MATCHES.items():
+        if scene_hint in scene_text:
+            preferred.update(occasions)
+    return preferred
 
 
-def compatibility_status(scene: dict[str, Any], outfit: dict[str, Any], compatibility: dict[str, Any]) -> tuple[str, str]:
+def compatibility_status(scene: dict[str, Any], outfit: dict[str, Any]) -> tuple[str, str]:
     scene_name = str(scene.get("scene", ""))
-    tags = outfit_tags(outfit, compatibility)
-    incompatible_key, incompatible = scene_rule(scene_name, compatibility, "incompatible")
-    compatible_key, compatible = scene_rule(scene_name, compatibility, "compatible")
+    scene_text = flatten_text(
+        {
+            "scene": scene.get("scene"),
+            "category": scene.get("category"),
+            "scene_tags": scene.get("scene_tags"),
+        }
+    )
+    outfit_text = flatten_text(outfit)
 
-    bad = sorted(tags & incompatible)
-    if bad:
-        return "incompatible", f"{incompatible_key}: {', '.join(bad)}"
+    for conflict_name, conflict in SCENE_OUTFIT_CONFLICTS.items():
+        if contains_any(scene_text, conflict["scene"]) and contains_any(outfit_text, conflict["outfit"]):
+            return "incompatible", f"heuristic conflict: {conflict_name}"
 
-    good = sorted(tags & compatible)
-    if good:
-        return "compatible", f"{compatible_key}: {', '.join(good)}"
+    preferred = preferred_occasions_for_scene(scene)
+    outfit_occasions = normalize_terms(outfit.get("occasion"))
+    matched_occasions = sorted(preferred & outfit_occasions)
+    if matched_occasions:
+        return "compatible", f"{scene_name}: matched occasion {', '.join(matched_occasions)}"
 
-    if compatible:
-        return "unknown", f"{compatible_key}: no known matching outfit tag"
-    return "unknown", "no compatibility rule for this scene"
+    if preferred:
+        return "unknown", f"{scene_name}: no matching outfit occasion"
+    return "unknown", f"{scene_name}: no scene-outfit heuristic"
 
 
 def allowed_action_score(scene: dict[str, Any], action: dict[str, Any]) -> int:
@@ -397,6 +450,22 @@ def allowed_action_score(scene: dict[str, Any], action: dict[str, Any]) -> int:
         if forbidden and (forbidden in text or forbidden == pose_type):
             return -100
     return score
+
+
+def action_scene_conflict(scene: dict[str, Any], action: dict[str, Any]) -> str | None:
+    scene_text = flatten_text(
+        {
+            "scene": scene.get("scene"),
+            "scene_summary": scene.get("scene_summary"),
+            "scene_tags": scene.get("scene_tags"),
+            "category": scene.get("category"),
+        }
+    )
+    action_text = flatten_text(action)
+    for conflict_name, action_terms, scene_terms in ACTION_SCENE_CONFLICTS:
+        if contains_any(action_text, action_terms) and not contains_any(scene_text, scene_terms):
+            return conflict_name
+    return None
 
 
 def scene_pose_score(scene: dict[str, Any], pose_type: str | None) -> int:
@@ -485,7 +554,7 @@ def command_compose(args: argparse.Namespace) -> int:
         )
         scene_index, scene = choose(scene_candidates, rng)
 
-        def outfit_score(item: dict[str, Any]) -> int:
+        def outfit_base_score(item: dict[str, Any]) -> int:
             score = 0
             if args.mood:
                 value = mood_value(item, args.mood)
@@ -494,7 +563,13 @@ def command_compose(args: argparse.Namespace) -> int:
                 score += value * 5
             if args.occasion and args.occasion not in normalize_terms(item.get("occasion")):
                 return -1
-            status, _ = compatibility_status(scene, item, atlas["compatibility"])
+            return score
+
+        def outfit_score(item: dict[str, Any]) -> int:
+            score = outfit_base_score(item)
+            if score < 0:
+                return -1
+            status, _ = compatibility_status(scene, item)
             if status == "incompatible":
                 return -1
             if args.strict_compatible and status != "compatible":
@@ -503,11 +578,31 @@ def command_compose(args: argparse.Namespace) -> int:
                 score += 12
             return score
 
-        outfit_index, outfit = choose(candidates(atlas["outfits"], outfit_score, lambda item: 0), rng)
-        compat_status, compat_note = compatibility_status(scene, outfit, atlas["compatibility"])
+        def outfit_relaxed_score(item: dict[str, Any]) -> int:
+            score = outfit_base_score(item)
+            if score < 0:
+                return -1
+            status, _ = compatibility_status(scene, item)
+            if status == "incompatible":
+                return -1
+            return score
+
+        outfit_fallback = None if args.strict_compatible else outfit_relaxed_score
+        outfit_index, outfit = choose(candidates(atlas["outfits"], outfit_score, outfit_fallback), rng)
+        compat_status, compat_note = compatibility_status(scene, outfit)
+
+        def action_scene_score(item: dict[str, Any]) -> int:
+            if action_scene_conflict(scene, item):
+                return -1
+            score = allowed_action_score(scene, item)
+            if score < 0:
+                return -1
+            if scene.get("allowed_actions") and score == 0:
+                return -1
+            return score
 
         def action_score(item: dict[str, Any]) -> int:
-            score = allowed_action_score(scene, item)
+            score = action_scene_score(item)
             if score < 0:
                 return -1
             if args.mood:
@@ -532,7 +627,7 @@ def command_compose(args: argparse.Namespace) -> int:
                 score += max(0, 6 - int(dynamic.get("intensity", 0) or 0))
             return score
 
-        action_index, action = choose(candidates(atlas["actions"], action_score, lambda item: 0), rng)
+        action_index, action = choose(candidates(atlas["actions"], action_score, action_scene_score), rng)
 
         def expression_score(item: dict[str, Any]) -> int:
             if args.mood:
@@ -614,7 +709,11 @@ def build_parser() -> argparse.ArgumentParser:
     compose.add_argument("--pose-type", help="Action pose.type filter")
     compose.add_argument("--interaction-min", type=int, help="Minimum action interaction.level")
     compose.add_argument("--dynamic-max", type=int, help="Maximum action dynamic.intensity")
-    compose.add_argument("--strict-compatible", action="store_true", help="Require known scene-outfit compatibility")
+    compose.add_argument(
+        "--strict-compatible",
+        action="store_true",
+        help="Require a positive scene-outfit heuristic match",
+    )
     compose.add_argument("--count", type=int, default=1)
     compose.add_argument("--seed", type=int, default=7)
     compose.add_argument("--json", action="store_true", help="Print machine-readable JSON")
